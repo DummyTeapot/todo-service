@@ -29,4 +29,9 @@ func main() {
 	router.GET("/tasks", taskHandler.GetAllTasks)
 	router.PUT("/tasks/:id", taskHandler.UpdateTask)
 	router.DELETE("/tasks/:id", taskHandler.DeleteTask)
+
+	logger.Info().Msgf("Start HTTP 8080")
+	if err := router.Run(":8080"); err != nil {
+		logger.Fatal().Err(err).Msg("HTTP error")
+	}
 }
