@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"todo-service/config"
+	"todo-service/internal/grpc"
 	"todo-service/internal/handler"
 	"todo-service/internal/repository"
 
@@ -27,7 +28,6 @@ func main() {
 	if err := db.Ping(); err != nil {
 		logger.Fatal().Err(err).Msg("Не удалось подключиться к БД")
 	}
-
 	logger.Info().Msg("Успешное подключение к БД")
 
 	taskRepo := repository.NewTaskRepository(db)
@@ -41,6 +41,11 @@ func main() {
 	router.GET("/tasks", taskHandler.GetAllTasks)
 	router.PUT("/tasks/:id", taskHandler.UpdateTask)
 	router.DELETE("/tasks/:id", taskHandler.DeleteTask)
+
+	logger.Info().Msgf("Старт gRPC сервера на 50051")
+	if err := grpc.StartGRPCServer(":50051", taskRepo); err != nil {
+		logger.Fatal().Err(err).Msg("Ошибка gRPC сервера")
+	}
 
 	logger.Info().Msgf("Старт HTTP сервера на 8080")
 	if err := router.Run(":8080"); err != nil {
