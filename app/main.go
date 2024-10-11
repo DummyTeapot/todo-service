@@ -42,10 +42,12 @@ func main() {
 	router.PUT("/tasks/:id", taskHandler.UpdateTask)
 	router.DELETE("/tasks/:id", taskHandler.DeleteTask)
 
-	logger.Info().Msgf("Старт gRPC сервера на 50051")
-	if err := grpc.StartGRPCServer(":50051", taskRepo); err != nil {
-		logger.Fatal().Err(err).Msg("Ошибка gRPC сервера")
-	}
+	go func() {
+		logger.Info().Msgf("Старт gRPC сервера на 50051")
+		if err := grpc.StartGRPCServer(":50051", taskRepo); err != nil {
+			logger.Fatal().Err(err).Msg("Ошибка gRPC сервера")
+		}
+	}()
 
 	logger.Info().Msgf("Старт HTTP сервера на 8080")
 	if err := router.Run(":8080"); err != nil {
