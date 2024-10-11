@@ -16,4 +16,4 @@ migrate:
 	cat migrations/create_tasks_table.sql | docker-compose -f docker/docker-compose.yml exec -T db psql -U postgres -d todo
 
 clean:
-	rm -rf bin
+	rm -rf bin && rm logs/app.log

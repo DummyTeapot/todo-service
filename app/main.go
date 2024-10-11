@@ -13,15 +13,27 @@ import (
 )
 
 func main() {
+	logger := config.InitLogger()
+
 	dsn := "postgres://postgres:postgres@localhost:5432/todo?sslmode=disable"
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqldb, pgdialect.New())
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error().Err(err).Msg("Не удалось закрыть соединение с БД")
+		}
+	}()
+
+	if err := db.Ping(); err != nil {
+		logger.Fatal().Err(err).Msg("Не удалось подключиться к БД")
+	}
+
+	logger.Info().Msg("Успешное подключение к БД")
 
 	taskRepo := repository.NewTaskRepository(db)
 
 	router := gin.Default()
 
-	logger := config.InitLogger()
 	taskHandler := handler.NewTaskHandler(taskRepo, logger)
 
 	router.POST("/tasks", taskHandler.CreateTask)
@@ -30,8 +42,8 @@ func main() {
 	router.PUT("/tasks/:id", taskHandler.UpdateTask)
 	router.DELETE("/tasks/:id", taskHandler.DeleteTask)
 
-	logger.Info().Msgf("Start HTTP 8080")
+	logger.Info().Msgf("Старт HTTP сервера на 8080")
 	if err := router.Run(":8080"); err != nil {
-		logger.Fatal().Err(err).Msg("HTTP error")
+		logger.Fatal().Err(err).Msg("Ошибка HTTP сервера")
 	}
 }
